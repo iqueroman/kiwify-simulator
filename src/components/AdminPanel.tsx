@@ -111,7 +111,40 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToSimulator, onLogout }) 
       {/* Admin Topbar */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          {/* Mobile Layout */}
+          <div className="block sm:hidden">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center min-w-0 flex-1">
+                <img
+                  src="https://kiwify.com.br/.netlify/images?url=_astro%2Flogo.0cuMVBav.png"
+                  alt="Kiwify"
+                  className="h-6 w-auto flex-shrink-0"
+                />
+                <span className="ml-2 text-sm font-semibold text-gray-900 truncate">
+                  Admin
+                </span>
+              </div>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <button 
+                  onClick={onBackToSimulator}
+                  className="bg-[var(--color-green)] text-white px-3 py-2 rounded-md text-xs font-medium hover:bg-[var(--color-green-light)] transition-colors"
+                >
+                  Simulador
+                </button>
+                {onLogout && (
+                  <button 
+                    onClick={onLogout}
+                    className="bg-gray-600 text-white px-3 py-2 rounded-md text-xs font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    Sair
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex justify-between items-center h-16">
             <div className="flex items-center">
               <img
                 src="https://kiwify.com.br/.netlify/images?url=_astro%2Flogo.0cuMVBav.png"

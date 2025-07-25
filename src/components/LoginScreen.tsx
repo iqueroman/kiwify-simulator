@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 
 interface LoginScreenProps {
   onLogin: () => void
+  onBack: () => void
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack }) => {
+  const [email, setEmail] = useState('artur@kiwify.com.br')
+  const [password, setPassword] = useState('tibia')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
@@ -47,8 +48,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="bg-white rounded-lg shadow-sm p-8 relative">
+          {/* Back Button */}
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Voltar ao Simulador
+          </button>
+
+          <form className="space-y-6 mt-8" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

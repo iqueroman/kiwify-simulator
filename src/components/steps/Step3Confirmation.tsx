@@ -36,7 +36,7 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ data, onUpdate, o
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Confirmação dos Dados</h2>
       
       <div className="space-y-6">

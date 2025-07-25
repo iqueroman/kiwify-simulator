@@ -132,7 +132,7 @@ function App() {
 
   // Show Login Screen
   if (currentView === 'login') {
-    return <LoginScreen onLogin={handleLogin} />
+    return <LoginScreen onLogin={handleLogin} onBack={showSimulator} />
   }
 
   // Show Admin Panel
@@ -145,7 +145,7 @@ function App() {
     return (
       <div className="min-h-screen bg-[var(--color-app-bg)]">
         <Topbar onAdminClick={showAdminPanel} />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="bg-white rounded-lg p-8 shadow-sm text-center">
             <div className="mb-6">
               <svg className="mx-auto h-16 w-16 text-[var(--color-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,7 +178,7 @@ function App() {
   return (
     <div className="min-h-screen bg-app-bg">
       <Topbar onAdminClick={showAdminPanel} />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <ProgressBar steps={steps} />
         {renderStep()}
       </div>

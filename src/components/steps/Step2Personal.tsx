@@ -36,7 +36,7 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
   const isValid = isValidName && isValidCPF && isValidEmail && isValidPhone
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Informações Pessoais</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">

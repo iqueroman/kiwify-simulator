@@ -58,7 +58,7 @@ const Step1Financial: React.FC<Step1FinancialProps> = ({ data, onUpdate, onNext 
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Informações Financeiras</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
