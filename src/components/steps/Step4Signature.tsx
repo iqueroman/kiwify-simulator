@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react'
 import SignatureCanvas from 'react-signature-canvas'
-import { FinancingData } from '../../types'
-import { formatCurrency } from '../../utils/calculations'
+import type { FinancingData } from '../../types'
 import { generatePDF } from '../../utils/pdfGenerator'
 import { supabase } from '../../lib/supabase'
 
@@ -33,12 +32,12 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
       // Get signature data
       const signatureData = signatureRef.current.toDataURL()
       
-      // Generate PDF
+      // Generate PDF with signature
       const pdfBlob = await generatePDF(data, signatureData)
       
       // Upload PDF to Supabase
       const fileName = `financing_proposal_${Date.now()}.pdf`
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('pdfs')
         .upload(fileName, pdfBlob)
 
@@ -93,87 +92,56 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
     }
   }
 
-  const totalPropertyValue = data.financedAmount + data.downPayment
-
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Assinatura Digital</h2>
       
       <div className="space-y-6">
         {/* PDF Preview */}
-        <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-center mb-6">PROPOSTA DE FINANCIAMENTO IMOBILIÁRIO</h3>
-          
-          <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <strong>Proponente:</strong> {data.fullName}
-              </div>
-              <div>
-                <strong>CPF:</strong> {data.cpf}
-              </div>
-              <div>
-                <strong>E-mail:</strong> {data.email}
-              </div>
-              <div>
-                <strong>Telefone:</strong> {data.phone}
-              </div>
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview da Proposta</h3>
+          {data.pdfUrl ? (
+            <iframe
+              src={data.pdfUrl}
+              className="w-full h-96 border border-gray-300 rounded"
+              title="Preview da Proposta de Financiamento"
+            />
+          ) : (
+            <div className="w-full h-96 border border-gray-300 rounded flex items-center justify-center bg-gray-100">
+              <p className="text-gray-500">PDF não disponível para preview</p>
             </div>
-            
-            <hr className="my-4" />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <strong>Valor Total do Imóvel:</strong> {formatCurrency(totalPropertyValue)}
-              </div>
-              <div>
-                <strong>Valor de Entrada:</strong> {formatCurrency(data.downPayment)}
-              </div>
-              <div>
-                <strong>Valor Financiado:</strong> {formatCurrency(data.financedAmount)}
-              </div>
-              <div>
-                <strong>Taxa de Juros:</strong> 12% ao ano
-              </div>
-              <div>
-                <strong>Prazo:</strong> {data.termMonths} meses
-              </div>
-              <div>
-                <strong>Valor da Parcela:</strong> {formatCurrency(data.monthlyPayment)}
-              </div>
-            </div>
-            
-            <hr className="my-4" />
-            
-            <div className="text-center">
-              <strong>VALOR TOTAL A PAGAR: {formatCurrency(data.totalAmount)}</strong>
-            </div>
-            
-            <div className="mt-6 text-xs text-gray-600">
-              <p>Esta proposta de financiamento está sujeita à análise de crédito e aprovação pela instituição financeira.</p>
-              <p>As condições apresentadas podem sofrer alterações mediante análise documental.</p>
-              <p>Data: {new Date().toLocaleDateString('pt-BR')}</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Signature Area */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Assinatura</h3>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-            <SignatureCanvas
-              ref={signatureRef}
-              canvasProps={{
-                width: 500,
-                height: 200,
-                className: 'w-full h-48 border border-gray-200 rounded'
-              }}
-            />
+            <div className="relative">
+              <SignatureCanvas
+                ref={signatureRef}
+                canvasProps={{
+                  width: 600,
+                  height: 200,
+                  style: {
+                    width: '100%',
+                    height: '200px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.375rem',
+                    touchAction: 'none'
+                  }
+                }}
+                backgroundColor="white"
+                penColor="black"
+                minWidth={1}
+                maxWidth={3}
+              />
+            </div>
             <div className="flex justify-between mt-2">
               <button
                 type="button"
                 onClick={clearSignature}
-                className="text-sm text-gray-600 hover:text-gray-800"
+                className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Limpar Assinatura
               </button>
@@ -184,7 +152,17 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-700">{error}</p>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700 font-medium">Erro</p>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -205,7 +183,7 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
               px-8 py-3 rounded-md font-semibold text-lg transition-colors
               ${isLoading 
                 ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-green text-white hover:bg-green-light'
+                : 'bg-[var(--color-green)] text-white hover:bg-[var(--color-green-light)]'
               }
             `}
           >

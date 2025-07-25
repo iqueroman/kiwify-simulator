@@ -1,6 +1,10 @@
 import React from 'react'
 
-const Topbar: React.FC = () => {
+interface TopbarProps {
+  onAdminClick?: () => void
+}
+
+const Topbar: React.FC<TopbarProps> = ({ onAdminClick }) => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,7 +19,10 @@ const Topbar: React.FC = () => {
               Simulador Imobiliário
             </span>
           </div>
-          <button className="bg-accent text-accent-text px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors">
+          <button 
+            onClick={onAdminClick}
+            className="bg-[var(--color-accent)] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors"
+          >
             Admin Panel
           </button>
         </div>

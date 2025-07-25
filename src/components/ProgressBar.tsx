@@ -1,5 +1,5 @@
 import React from 'react'
-import { FormStep } from '../types'
+import type { FormStep } from '../types'
 
 interface ProgressBarProps {
   steps: FormStep[]
@@ -16,9 +16,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps }) => {
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
                   ${step.isCompleted 
-                    ? 'bg-green text-white' 
+                    ? 'bg-[var(--color-green)] text-white' 
                     : step.isActive 
-                      ? 'bg-green-light text-white' 
+                      ? 'bg-[var(--color-green-light)] text-white' 
                       : 'bg-gray-200 text-gray-600'
                   }
                 `}
@@ -31,12 +31,12 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps }) => {
                   step.id
                 )}
               </div>
-              <span className={`ml-3 text-sm font-medium ${step.isActive ? 'text-green' : 'text-gray-600'}`}>
+              <span className={`ml-3 text-sm font-medium ${step.isActive ? 'text-[var(--color-green)]' : 'text-gray-600'}`}>
                 {step.title}
               </span>
             </div>
             {index < steps.length - 1 && (
-              <div className={`flex-1 h-1 mx-4 ${step.isCompleted ? 'bg-green' : 'bg-gray-200'}`} />
+              <div className={`flex-1 h-1 mx-4 ${step.isCompleted ? 'bg-[var(--color-green)]' : 'bg-gray-200'}`} />
             )}
           </React.Fragment>
         ))}

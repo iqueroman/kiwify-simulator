@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { FinancingData } from '../types'
+import type { FinancingData } from '../types'
 import { formatCurrency } from './calculations'
 
 export const generatePDF = async (data: FinancingData, signatureData: string): Promise<Blob> => {

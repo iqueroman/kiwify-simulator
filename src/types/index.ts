@@ -14,6 +14,9 @@ export interface FinancingData {
   // Calculated values
   monthlyPayment: number
   totalAmount: number
+  
+  // Step 3: Generated PDF
+  pdfUrl?: string
 }
 
 export interface FormStep {

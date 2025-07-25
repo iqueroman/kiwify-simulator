@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Topbar from './components/Topbar'
+import AdminPanel from './components/AdminPanel'
+import LoginScreen from './components/LoginScreen'
 import ProgressBar from './components/ProgressBar'
 import Step1Financial from './components/steps/Step1Financial'
 import Step2Personal from './components/steps/Step2Personal'
 import Step3Confirmation from './components/steps/Step3Confirmation'
 import Step4Signature from './components/steps/Step4Signature'
-import { FinancingData, FormStep } from './types'
+import type { FinancingData, FormStep } from './types'
 import { calculateMortgage } from './utils/calculations'
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [currentView, setCurrentView] = useState<'simulator' | 'admin' | 'login'>('simulator')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [data, setData] = useState<FinancingData>({
     financedAmount: 0,
     downPayment: 0,
@@ -63,6 +67,28 @@ function App() {
     setIsCompleted(true)
   }
 
+  const showAdminPanel = () => {
+    if (isAuthenticated) {
+      setCurrentView('admin')
+    } else {
+      setCurrentView('login')
+    }
+  }
+
+  const showSimulator = () => {
+    setCurrentView('simulator')
+  }
+
+  const handleLogin = () => {
+    setIsAuthenticated(true)
+    setCurrentView('admin')
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    setCurrentView('simulator')
+  }
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -86,6 +112,7 @@ function App() {
         return (
           <Step3Confirmation
             data={data}
+            onUpdate={updateData}
             onNext={nextStep}
             onPrevious={previousStep}
           />
@@ -103,14 +130,25 @@ function App() {
     }
   }
 
+  // Show Login Screen
+  if (currentView === 'login') {
+    return <LoginScreen onLogin={handleLogin} />
+  }
+
+  // Show Admin Panel
+  if (currentView === 'admin') {
+    return <AdminPanel onBackToSimulator={showSimulator} onLogout={handleLogout} />
+  }
+
+  // Show Completion Screen
   if (isCompleted) {
     return (
-      <div className="min-h-screen bg-app-bg">
-        <Topbar />
+      <div className="min-h-screen bg-[var(--color-app-bg)]">
+        <Topbar onAdminClick={showAdminPanel} />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="bg-white rounded-lg p-8 shadow-sm text-center">
             <div className="mb-6">
-              <svg className="mx-auto h-16 w-16 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-16 w-16 text-[var(--color-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -126,7 +164,7 @@ function App() {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-6 px-6 py-2 bg-green text-white rounded-md font-medium hover:bg-green-light transition-colors"
+              className="mt-6 px-6 py-2 bg-[var(--color-green)] text-white rounded-md font-medium hover:bg-[var(--color-green-light)] transition-colors"
             >
               Nova Simulação
             </button>
@@ -136,9 +174,10 @@ function App() {
     )
   }
 
+  // Show Simulator
   return (
     <div className="min-h-screen bg-app-bg">
-      <Topbar />
+      <Topbar onAdminClick={showAdminPanel} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <ProgressBar steps={steps} />
         {renderStep()}

@@ -1,15 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;500;600;700&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
+@theme {
   --color-green: #2db56f;
   --color-green-light: #45e58d;
   --color-accent: #33334f;
   --color-accent-text: #fff;
   --color-link: #c36;
   --color-link-hover: #336;
+  --color-app-bg: #eafaef;
+  
+  --font-family-mukta: 'Mukta', ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -18,8 +19,8 @@
 
 body {
   margin: 0;
-  font-family: 'Mukta', sans-serif;
+  font-family: var(--font-family-mukta);
   color: #000000;
-  background-color: #eafaef;
+  background-color: var(--color-app-bg);
   min-height: 100vh;
 }

@@ -1,6 +1,6 @@
 import React from 'react'
-import { FinancingData } from '../../types'
-import { formatCPF, formatPhone, validateCPF, validateEmail } from '../../utils/calculations'
+import type { FinancingData } from '../../types'
+import { formatCPF, formatPhone, validateCPF, validateEmail, validateCompleteName, validateBrazilianPhone } from '../../utils/calculations'
 
 interface Step2PersonalProps {
   data: FinancingData
@@ -27,12 +27,13 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
     onUpdate({ phone: formattedPhone })
   }
 
-  const isValidCPF = data.cpf ? validateCPF(data.cpf) : true
-  const isValidEmail = data.email ? validateEmail(data.email) : true
-  const isValid = data.fullName.trim() && 
-                  data.cpf && isValidCPF && 
-                  data.email && isValidEmail && 
-                  data.phone.trim()
+  // Validation logic
+  const isValidName = data.fullName ? validateCompleteName(data.fullName) : false
+  const isValidCPF = data.cpf ? validateCPF(data.cpf) : false
+  const isValidEmail = data.email ? validateEmail(data.email) : false
+  const isValidPhone = data.phone ? validateBrazilianPhone(data.phone) : false
+  
+  const isValid = isValidName && isValidCPF && isValidEmail && isValidPhone
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm">
@@ -45,13 +46,23 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
           </label>
           <input
             type="text"
+            inputMode="text"
+            autoCapitalize="words"
+            autoComplete="name"
             id="fullName"
             value={data.fullName || ''}
             onChange={(e) => onUpdate({ fullName: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green focus:border-transparent"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
+              !isValidName && data.fullName ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-[var(--color-green)]'
+            }`}
             placeholder="Digite seu nome completo"
             required
           />
+          {!isValidName && data.fullName && (
+            <p className="mt-1 text-sm text-red-600">
+              Digite nome e sobrenome (ex: João Silva)
+            </p>
+          )}
         </div>
 
         <div>
@@ -60,11 +71,13 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
           </label>
           <input
             type="text"
+            inputMode="numeric"
+            autoComplete="off"
             id="cpf"
             value={data.cpf || ''}
             onChange={handleCPFChange}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
-              !isValidCPF ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-green'
+              !isValidCPF && data.cpf ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-[var(--color-green)]'
             }`}
             placeholder="000.000.000-00"
             maxLength={14}
@@ -81,11 +94,14 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
           </label>
           <input
             type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoComplete="email"
             id="email"
             value={data.email || ''}
             onChange={(e) => onUpdate({ email: e.target.value })}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
-              !isValidEmail ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-green'
+              !isValidEmail && data.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-[var(--color-green)]'
             }`}
             placeholder="seu@email.com"
             required
@@ -101,14 +117,23 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
           </label>
           <input
             type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
             id="phone"
             value={data.phone || ''}
             onChange={handlePhoneChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green focus:border-transparent"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
+              !isValidPhone && data.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-[var(--color-green)]'
+            }`}
             placeholder="(11) 99999-9999"
             maxLength={15}
             required
           />
+          {!isValidPhone && data.phone && (
+            <p className="mt-1 text-sm text-red-600">
+              Telefone inválido. Use formato brasileiro: (11) 99999-9999
+            </p>
+          )}
         </div>
 
         <div className="flex justify-between pt-4">
@@ -125,7 +150,7 @@ const Step2Personal: React.FC<Step2PersonalProps> = ({ data, onUpdate, onNext, o
             className={`
               px-6 py-2 rounded-md text-white font-medium transition-colors
               ${isValid 
-                ? 'bg-green hover:bg-green-light' 
+                ? 'bg-[var(--color-green)] hover:bg-[var(--color-green-light)]' 
                 : 'bg-gray-300 cursor-not-allowed'
               }
             `}
