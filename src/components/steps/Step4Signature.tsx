@@ -80,10 +80,10 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
       const pdfBlob = await generatePDF(data, signatureData)
       
       // Upload PDF to Supabase
-      const fileName = `financing_proposal_${Date.now()}.pdf`
+      const uploadFileName = `financing_proposal_${Date.now()}.pdf`
       const { error: uploadError } = await supabase.storage
         .from('pdfs')
-        .upload(fileName, pdfBlob)
+        .upload(uploadFileName, pdfBlob)
 
       if (uploadError) {
         throw new Error('Erro ao fazer upload do PDF: ' + uploadError.message)
@@ -92,7 +92,7 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
       // Get public URL
       const { data: urlData } = supabase.storage
         .from('pdfs')
-        .getPublicUrl(fileName)
+        .getPublicUrl(uploadFileName)
 
       // Save proposal to database
       const { error: dbError } = await supabase
@@ -120,7 +120,7 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
 
       // Download PDF for user - Mobile compatible
       const url = URL.createObjectURL(pdfBlob)
-      const fileName = `Proposta_Financiamento_${data.fullName.replace(/\s+/g, '_')}.pdf`
+      const downloadFileName = `Proposta_Financiamento_${data.fullName.replace(/\s+/g, '_')}.pdf`
       
       // Check if we're on mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -132,14 +132,14 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
           newWindow.document.write(`
             <html>
               <head>
-                <title>${fileName}</title>
+                <title>${downloadFileName}</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
               </head>
               <body style="margin:0; padding:20px; font-family:Arial,sans-serif;">
                 <div style="text-align:center;">
                   <h3>Seu PDF está pronto!</h3>
                   <p>Toque no botão abaixo para baixar:</p>
-                  <a href="${url}" download="${fileName}" 
+                  <a href="${url}" download="${downloadFileName}" 
                      style="display:inline-block; padding:12px 24px; background:#10b981; color:white; text-decoration:none; border-radius:6px; margin:10px;">
                     📄 Baixar PDF
                   </a>
@@ -157,7 +157,7 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
         // Desktop: traditional download
         const a = document.createElement('a')
         a.href = url
-        a.download = fileName
+        a.download = downloadFileName
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)

@@ -11,32 +11,68 @@ interface Step1FinancialProps {
 const Step1Financial: React.FC<Step1FinancialProps> = ({ data, onUpdate, onNext }) => {
   const [financedAmountInput, setFinancedAmountInput] = useState('')
   const [downPaymentInput, setDownPaymentInput] = useState('')
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Initialize input fields with formatted values when data changes
+  // Initialize input fields with formatted values only once when component mounts
   useEffect(() => {
-    if (data.financedAmount > 0) {
-      setFinancedAmountInput(formatCurrencyInput((data.financedAmount * 100).toString()))
+    if (!isInitialized) {
+      if (data.financedAmount > 0) {
+        setFinancedAmountInput(formatCurrency(data.financedAmount))
+      }
+      if (data.downPayment > 0) {
+        setDownPaymentInput(formatCurrency(data.downPayment))
+      }
+      setIsInitialized(true)
     }
-  }, [data.financedAmount])
-
-  useEffect(() => {
-    if (data.downPayment > 0) {
-      setDownPaymentInput(formatCurrencyInput((data.downPayment * 100).toString()))
-    }
-  }, [data.downPayment])
+  }, [data.financedAmount, data.downPayment, isInitialized])
 
   const handleFinancedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCurrencyInput(e.target.value)
+    const inputValue = e.target.value
+    const formatted = formatCurrencyInput(inputValue)
     setFinancedAmountInput(formatted)
-    const numericValue = parseCurrencyInput(formatted)
-    onUpdate({ financedAmount: numericValue })
+    
+    // Only update parent state if we have a valid formatted value
+    if (formatted) {
+      const numericValue = parseCurrencyInput(formatted)
+      onUpdate({ financedAmount: numericValue })
+    } else if (inputValue === '') {
+      // Clear the value when input is empty
+      setFinancedAmountInput('')
+      onUpdate({ financedAmount: 0 })
+    }
   }
 
   const handleDownPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCurrencyInput(e.target.value)
+    const inputValue = e.target.value
+    const formatted = formatCurrencyInput(inputValue)
     setDownPaymentInput(formatted)
-    const numericValue = parseCurrencyInput(formatted)
-    onUpdate({ downPayment: numericValue })
+    
+    // Only update parent state if we have a valid formatted value
+    if (formatted) {
+      const numericValue = parseCurrencyInput(formatted)
+      onUpdate({ downPayment: numericValue })
+    } else if (inputValue === '') {
+      // Clear the value when input is empty
+      setDownPaymentInput('')
+      onUpdate({ downPayment: 0 })
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow: backspace, delete, tab, escape, enter, home, end, left, right
+    if ([8, 9, 27, 13, 46, 35, 36, 37, 39].indexOf(e.keyCode) !== -1 ||
+        // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        (e.keyCode === 65 && e.ctrlKey === true) ||
+        (e.keyCode === 67 && e.ctrlKey === true) ||
+        (e.keyCode === 86 && e.ctrlKey === true) ||
+        (e.keyCode === 88 && e.ctrlKey === true)) {
+      return
+    }
+    
+    // Ensure that it is a number and stop the keypress
+    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+      e.preventDefault()
+    }
   }
 
   // Validation logic
@@ -72,6 +108,7 @@ const Step1Financial: React.FC<Step1FinancialProps> = ({ data, onUpdate, onNext 
             id="financedAmount"
             value={financedAmountInput}
             onChange={handleFinancedAmountChange}
+            onKeyDown={handleKeyDown}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-green)] focus:border-transparent"
             placeholder="R$ 0,00"
             required
@@ -88,6 +125,7 @@ const Step1Financial: React.FC<Step1FinancialProps> = ({ data, onUpdate, onNext 
             id="downPayment"
             value={downPaymentInput}
             onChange={handleDownPaymentChange}
+            onKeyDown={handleKeyDown}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
               !isDownPaymentValid && data.financedAmount > 0 && data.downPayment > 0
                 ? 'border-red-300 focus:ring-red-500' 
