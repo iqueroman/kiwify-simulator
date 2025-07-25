@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import SignatureCanvas from 'react-signature-canvas'
 import type { FinancingData } from '../../types'
 import { generatePDF } from '../../utils/pdfGenerator'
@@ -12,8 +12,52 @@ interface Step4SignatureProps {
 
 const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onComplete }) => {
   const signatureRef = useRef<SignatureCanvas>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 200 })
+
+  // Update canvas size based on container
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth
+        const aspectRatio = 3 // width:height = 3:1
+        const height = Math.max(150, Math.min(200, containerWidth / aspectRatio))
+        const width = containerWidth
+        
+        setCanvasSize({ width, height })
+        
+        // Resize existing canvas if it exists
+        if (signatureRef.current) {
+          const canvas = signatureRef.current.getCanvas()
+          const imageData = canvas.toDataURL()
+          
+          // Clear and resize
+          signatureRef.current.clear()
+          
+          // If there was existing signature data, try to restore it
+          if (imageData && imageData !== 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==') {
+            const img = new Image()
+            img.onload = () => {
+              const ctx = canvas.getContext('2d')
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, width, height)
+              }
+            }
+            img.src = imageData
+          }
+        }
+      }
+    }
+
+    // Initial size
+    updateCanvasSize()
+
+    // Update on resize
+    window.addEventListener('resize', updateCanvasSize)
+    return () => window.removeEventListener('resize', updateCanvasSize)
+  }, [])
 
   const clearSignature = () => {
     signatureRef.current?.clear()
@@ -74,15 +118,53 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
         throw new Error('Erro ao salvar proposta: ' + dbError.message)
       }
 
-      // Download PDF for user
+      // Download PDF for user - Mobile compatible
       const url = URL.createObjectURL(pdfBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `Proposta_Financiamento_${data.fullName.replace(/\s+/g, '_')}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const fileName = `Proposta_Financiamento_${data.fullName.replace(/\s+/g, '_')}.pdf`
+      
+      // Check if we're on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
+      if (isMobile) {
+        // Mobile: Open in new tab for download
+        const newWindow = window.open()
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head>
+                <title>${fileName}</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+              </head>
+              <body style="margin:0; padding:20px; font-family:Arial,sans-serif;">
+                <div style="text-align:center;">
+                  <h3>Seu PDF está pronto!</h3>
+                  <p>Toque no botão abaixo para baixar:</p>
+                  <a href="${url}" download="${fileName}" 
+                     style="display:inline-block; padding:12px 24px; background:#10b981; color:white; text-decoration:none; border-radius:6px; margin:10px;">
+                    📄 Baixar PDF
+                  </a>
+                  <br><br>
+                  <small style="color:#666;">Se o download não funcionar, use o botão "Compartilhar" do seu navegador.</small>
+                </div>
+              </body>
+            </html>
+          `)
+        } else {
+          // Fallback: direct window.open
+          window.open(url, '_blank')
+        }
+      } else {
+        // Desktop: traditional download
+        const a = document.createElement('a')
+        a.href = url
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      }
+      
+      // Clean up after a delay to ensure download starts
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
 
       onComplete()
     } catch (err) {
@@ -101,13 +183,37 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
         <div className="bg-gray-50 rounded-lg p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview da Proposta</h3>
           {data.pdfUrl ? (
-            <iframe
-              src={data.pdfUrl}
-              className="w-full h-96 border border-gray-300 rounded"
-              title="Preview da Proposta de Financiamento"
-            />
+            <div className="space-y-4">
+              {/* Desktop iframe preview */}
+              <div className="hidden md:block">
+                <iframe
+                  src={data.pdfUrl}
+                  className="w-full h-96 border border-gray-300 rounded"
+                  title="Preview da Proposta de Financiamento"
+                />
+              </div>
+              
+              {/* Mobile fallback with preview button */}
+              <div className="md:hidden">
+                <div className="w-full h-48 border border-gray-300 rounded flex flex-col items-center justify-center bg-gray-100 space-y-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-gray-600 text-center text-sm">
+                    Preview disponível após assinatura
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => window.open(data.pdfUrl, '_blank')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Visualizar PDF
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="w-full h-96 border border-gray-300 rounded flex items-center justify-center bg-gray-100">
+            <div className="w-full h-48 md:h-96 border border-gray-300 rounded flex items-center justify-center bg-gray-100">
               <p className="text-gray-500">PDF não disponível para preview</p>
             </div>
           )}
@@ -117,24 +223,27 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Assinatura</h3>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-            <div className="relative">
+            <div className="relative" ref={containerRef}>
               <SignatureCanvas
                 ref={signatureRef}
                 canvasProps={{
-                  width: 600,
-                  height: 200,
+                  width: canvasSize.width,
+                  height: canvasSize.height,
                   style: {
                     width: '100%',
-                    height: '200px',
+                    height: `${canvasSize.height}px`,
                     border: '1px solid #e5e7eb',
                     borderRadius: '0.375rem',
-                    touchAction: 'none'
+                    touchAction: 'none',
+                    display: 'block'
                   }
                 }}
                 backgroundColor="white"
                 penColor="black"
-                minWidth={1}
-                maxWidth={3}
+                minWidth={window.innerWidth < 768 ? 2 : 1}
+                maxWidth={window.innerWidth < 768 ? 4 : 3}
+                velocityFilterWeight={0.7}
+                throttle={16}
               />
             </div>
             <div className="flex justify-between mt-2">
@@ -145,7 +254,12 @@ const Step4Signature: React.FC<Step4SignatureProps> = ({ data, onPrevious, onCom
               >
                 Limpar Assinatura
               </button>
-              <p className="text-xs text-gray-500">Assine com o mouse ou toque na tela</p>
+              <p className="text-xs text-gray-500">
+                {window.innerWidth < 768 
+                  ? 'Use o dedo para assinar. Mantenha o telefone estável.' 
+                  : 'Assine com o mouse ou toque na tela'
+                }
+              </p>
             </div>
           </div>
         </div>
